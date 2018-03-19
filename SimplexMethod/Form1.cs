@@ -71,10 +71,16 @@ namespace SimplexMethod
 
             //Добавление z(x) (функция искуственных базисов)
             s_table = find_z_row(s_table, row-1,col-1);
-            //Поиск результирующего элемента
-            int[] result_indexes = find_result_element(s_table);
 
-            s_table = recount_result_lines(s_table,result_indexes);
+            //Поиск результирующего элемента
+            int[] result_indexes = new int[2];
+            do
+            {
+                result_indexes = find_result_element(s_table);
+                s_table = recount_result_lines(s_table, result_indexes);
+                double s = s_table[s_table.GetLength(0) - 1, s_table.GetLength(1) - 2];
+            }
+            while (s_table[s_table.GetLength(0) - 1, s_table.GetLength(1) - 2]>0);
 
             print_array(s_table);
 
@@ -124,7 +130,7 @@ namespace SimplexMethod
             int index_max = -1;
             int index_min = -1;
             int[] index_res = new int[2];
-            for (int j = arr.GetLength(1) - 3; j >=0 ; j--) {
+            for (int j = 0; j < arr.GetLength(1) - 2; j++) {
                 if (arr[arr.GetLength(0) - 1, j] > max) {
                     max = arr[arr.GetLength(0) - 1, j];
                     index_max = j;
