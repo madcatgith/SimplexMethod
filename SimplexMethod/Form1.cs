@@ -1,0 +1,222 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Diagnostics;
+
+namespace SimplexMethod
+{
+    public partial class Form1 : Form
+    {
+        public Form1()
+        {
+            InitializeComponent();
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            textBox1.Text = "6";
+            textBox2.Text = "3";
+
+            int col = Int32.Parse(textBox1.Text.ToString()) + 1;
+            int row = Int32.Parse(textBox2.Text.ToString()) + 1;
+
+            dataGridView1.ColumnCount = col;
+            dataGridView1.RowCount = row;
+            for (int i = 0; i < (dataGridView1.ColumnCount-1); i++)
+            {
+                dataGridView1.Columns[i].HeaderText = "x" + (i+1);
+            }
+
+            TestFill();
+
+            double[,] test_mtrx = new double[,] { { 2, 1, 1, 0, 0, 0, 800 }, { 0, 1, 0, 2, 1, 0, 900 }, { 0, 0, 1, 1, 2, 3, 6000 }, { 0.4, 1.1, 1.4, 0, 0.3, 0.6, 0 } };
+            double[,] s_table = new double[row+1,col+row];
+            int k = 0; //итератор искуственного базиса
+
+            //Формирование матрицы с искуственным базисом без f(x) и базисных значений
+            for (int i = 0; i < s_table.GetLength(0)-1; i++) {
+                double buffer = 0;
+                for (int j = 0;j < s_table.GetLength(1)-1; j++) {
+                    if (isset(test_mtrx, i, j)&&(i<test_mtrx.GetLength(0)-1)&&(j<test_mtrx.GetLength(1)-1))
+                    {
+                        s_table[i, j] = test_mtrx[i, j];
+                    }
+                    else {
+                        if ((j-(test_mtrx.GetLength(1)-1)==i)&&(i<test_mtrx.GetLength(0)-1))
+                        {
+                            s_table[i, j] = 1;
+                        }
+                        else
+                        {
+                            s_table[i, j] = 0;
+                        }
+                    }
+                }
+            }
+            //Добавление f(x) (остатков раскроя)
+            for (int i = 0; i < test_mtrx.GetLength(1); i++) {
+                s_table[s_table.GetLength(0) - 2, i] = test_mtrx[test_mtrx.GetLength(0) - 1, i];
+            }
+            //Добавление базисных значений (количество заготовок)
+            for (int i = 0; i < test_mtrx.GetLength(0); i++)
+            {
+                s_table[i,s_table.GetLength(1)-2] = test_mtrx[i,test_mtrx.GetLength(1)-1];
+            }
+
+
+            print_array(s_table);
+        }
+
+        private void TestFill() {
+            double[,] mtrx = new double[,] { {2, 1, 1, 0, 0, 0,800 },{0, 1, 0, 2, 1, 0,900 },{ 0, 0, 1, 1, 2, 3,6000},{ 0.4,1.1,1.4,0,0.3,0.6,0} };
+            for (int i = 0; i < 4; i++) {
+                for (int j = 0; j < 7; j++) {
+                    dataGridView1.Rows[i].Cells[j].Value = mtrx[i, j];
+                }
+            }
+        }
+
+        private bool isset(double[,] x,int i,int j) {
+            try {
+                double z = x[i,j];
+                return true;
+            }
+            catch (Exception ex) {
+                return false;
+            }
+        }
+
+        private void print_array(double[,] arr) {
+            dataGridView1.Rows.Clear();
+            dataGridView1.RowCount = arr.GetLength(0);
+            dataGridView1.ColumnCount = arr.GetLength(1);
+            
+            for (int i = 0; i < arr.GetLength(0); i++) {
+                for (int j = 0; j < arr.GetLength(1); j++) {
+                    if(j<(arr.GetLength(1)-2))
+                    dataGridView1.Columns[j].HeaderText = "x" + (j + 1);
+                    dataGridView1.Rows[i].Cells[j].Value = arr[i, j];
+                }
+            }
+        }
+
+        private void print_array(List<int[]> arr)
+        {
+            dataGridView1.Rows.Clear();
+            dataGridView1.RowCount = arr[0].Length;
+            dataGridView1.ColumnCount = arr.Count();
+
+            for (int i = 0; i < arr.Count; i++) {
+                for (int j = 0; j < arr[i].Length; j++) {
+                    dataGridView1.Rows[j].Cells[i].Value = arr[i][j];
+                }
+            }
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            int start_size = 24;
+            double[] start_type_size = { 6, 4, 3, 2 };
+            double[] type_size = new double[start_type_size.Length];
+            int[] result_arr = new int[type_size.Length];
+            double[] temp_arr = new double[type_size.Length];
+            List<int[]> result_list = new List<int[]>();
+            bool flag = false;
+
+
+
+            do //temp
+            {
+                int i = 0;
+                int last_el = get_last_el(result_arr);
+                int temp_size = 0;
+                start_type_size.CopyTo(type_size, 0);
+
+                if (last_el < 0)
+                {
+                    temp_size = start_size;
+                }
+                else {
+                    //Debugger.Break();
+                    if (last_el > 0)
+                    {
+                        int[] tr = new int[result_arr.Length];
+
+                        for (int r = 0; r <= last_el; r++)
+                        {
+                            tr[r] = result_arr[r];
+                        }
+                        result_arr = tr;
+
+                        result_arr[last_el] = result_arr[last_el] - 1;
+                        temp_size = start_size;
+
+                        for (int r = 0; r <= last_el; r++) {
+                            temp_size = temp_size - (int)(result_arr[r] * type_size[r]);
+                        }
+
+                    }
+                    else
+                    {
+                        result_arr[last_el] = result_arr[last_el] - 1;
+                        temp_size = start_size - (int)(result_arr[last_el] * type_size[last_el]);
+                    }
+                    for (int k = 0; k <= last_el; k++)
+                    {
+                        type_size[k] = -1;
+                    }
+
+                }
+
+                foreach (double t in type_size)
+                {
+                    if (t > 0)
+                    {
+                        result_arr[i] = temp_size / (int)t;
+                        temp_size = (int)(temp_size - (result_arr[i] * t));
+                        //Debugger.Break();
+                    }
+                    i++;
+                }
+
+                int[] temp = new int[result_arr.Length];
+                result_arr.CopyTo(temp, 0);
+
+                flag = false;
+                for(int h=result_arr.Length-2;h>=0;h--)
+                {
+                    if (result_arr[h] > 0) {
+                        flag = true;
+                        break;
+                    }
+                }
+
+                result_list.Add(temp);
+
+
+            }
+            while (flag);
+
+            print_array(result_list);
+        }
+
+        private int get_last_el(int[] result_arr)
+        {
+            for (int i = result_arr.Length-2; i >=0 ; i--)
+            {
+                if (result_arr[i] > 0)
+                {
+                    return i;
+                }
+            }
+            
+            return -1;
+        }
+    }
+}
