@@ -201,28 +201,70 @@ namespace SimplexMethod
             }
         }
 
-        private void print_array(List<int[]> arr)
+        private void print_array(List<double[]> arr, List<double> osta, int[] kol)
         {
             dataGridView1.Rows.Clear();
-            dataGridView1.RowCount = arr[0].Length;
-            dataGridView1.ColumnCount = arr.Count();
-
+            dataGridView1.RowCount = arr[0].Length+1;
+            dataGridView1.ColumnCount = arr.Count()+1;
+            int num = 0;
+            int kl = 0;
             for (int i = 0; i < arr.Count; i++) {
+                kl = i;
                 for (int j = 0; j < arr[i].Length; j++) {
                     dataGridView1.Rows[j].Cells[i].Value = arr[i][j];
+                    num = j;
                 }
             }
+            for (int i = 0; i < arr.Count; i++)
+                {
+                    dataGridView1.Rows[num+1].Cells[i].Value = Math.Round(osta[i], 2);
+                }
+            int row_dla_null = 0;
+            for (int j = 0; j < arr[0].Length; j++)
+            {
+                dataGridView1.Rows[j].Cells[kl+1].Value = kol[j];
+                row_dla_null = j;
+            }
+            dataGridView1.Rows[row_dla_null+1].Cells[kl + 1].Value = 0;
+
+            int lin = dataGridView1.RowCount;
+            int stb = dataGridView1.ColumnCount;
+            double[,] matrix = new double[lin, stb];
+            for (int j = 0; j < lin; j++)
+            {
+                for (int i = 0; i < stb; i++)
+                {
+                    matrix[j, i] = Convert.ToDouble(dataGridView1.Rows[j].Cells[i].Value);   // заполняем матрицу                 
+                }
+            }
+            //Debugger.Break();
+
         }
 
         //Функция заполнения вариантов раскроя
         private void button2_Click(object sender, EventArgs e)
-        {
-            int start_size = 24;
-            double[] start_type_size = { 6, 4, 3, 2 };
+        {   
+            int gr2kol = dataGridView2.ColumnCount-1;
+            int gr2row = dataGridView2.RowCount-1;
+            double[] start_type_size = new double[gr2row];
+            for (int p = 0; p < gr2row; p++)
+            {
+                start_type_size[p] = Convert.ToDouble(dataGridView2.Rows[p].Cells[0].Value);
+            }
+            int[] kolich_d = new int[gr2row];
+            for (int p = 0; p < gr2row; p++)
+            {
+                kolich_d[p] = Convert.ToInt32(dataGridView2.Rows[p].Cells[1].Value);
+            }
+            //Debugger.Break();
+            int start_size = Convert.ToInt32(textBox3.Text);
+            //double[] start_type_size = { 6.5, 3.7, 3 };
+            //int[] kolich_d = { 600, 800, 6000, 0 };
             double[] type_size = new double[start_type_size.Length];
-            int[] result_arr = new int[type_size.Length];
+            double[] result_arr = new double[type_size.Length];
             double[] temp_arr = new double[type_size.Length];
-            List<int[]> result_list = new List<int[]>();
+            List<double[]> result_list = new List<double[]>();
+            List<double> ostatok = new List<double>();
             bool flag = false;
 
 
@@ -231,7 +273,7 @@ namespace SimplexMethod
             {
                 int i = 0;
                 int last_el = get_last_el(result_arr);
-                int temp_size = 0;
+                double temp_size = 0;
                 start_type_size.CopyTo(type_size, 0);
 
                 if (last_el < 0)
@@ -241,11 +283,11 @@ namespace SimplexMethod
                 else {
                     if (last_el > 0)
                     {
-                        int[] tr = new int[result_arr.Length];
+                        double[] tr = new double[result_arr.Length];
 
                         for (int r = 0; r <= last_el; r++)
                         {
-                            tr[r] = result_arr[r];
+                            tr[r] = (int)result_arr[r];
                         }
                         result_arr = tr;
 
@@ -253,14 +295,14 @@ namespace SimplexMethod
                         temp_size = start_size;
 
                         for (int r = 0; r <= last_el; r++) {
-                            temp_size = temp_size - (int)(result_arr[r] * type_size[r]);
+                            temp_size = temp_size - (double)(result_arr[r] * type_size[r]);
                         }
 
                     }
                     else
                     {
-                        result_arr[last_el] = result_arr[last_el] - 1;
-                        temp_size = start_size - (int)(result_arr[last_el] * type_size[last_el]);
+                        result_arr[last_el] = result_arr[last_el] - 1;                        
+                        temp_size = start_size - (double)(result_arr[last_el] * type_size[last_el]);
                     }
                     for (int k = 0; k <= last_el; k++)
                     {
@@ -273,13 +315,14 @@ namespace SimplexMethod
                 {
                     if (t > 0)
                     {
-                        result_arr[i] = temp_size / (int)t;
-                        temp_size = (int)(temp_size - (result_arr[i] * t));
+                        result_arr[i] = (int)Math.Truncate((temp_size / t));
+                        temp_size = temp_size - (result_arr[i] * t);
                     }
                     i++;
                 }
+                ostatok.Add(temp_size);
 
-                int[] temp = new int[result_arr.Length];
+                double[] temp = new double[result_arr.Length];
                 result_arr.CopyTo(temp, 0);
 
                 flag = false;
@@ -297,10 +340,10 @@ namespace SimplexMethod
             }
             while (flag);
 
-            print_array(result_list);
+            print_array(result_list, ostatok, kolich_d);
         }
 
-        private int get_last_el(int[] result_arr)
+        private int get_last_el(double[] result_arr)
         {
             for (int i = result_arr.Length-2; i >=0 ; i--)
             {
