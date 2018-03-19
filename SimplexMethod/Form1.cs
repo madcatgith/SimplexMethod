@@ -20,7 +20,7 @@ namespace SimplexMethod
 
         private void button1_Click(object sender, EventArgs e)
         {
-            textBox1.Text = "6";
+            textBox1.Text = "3";
             textBox2.Text = "3";
 
             int col = Int32.Parse(textBox1.Text.ToString()) + 1;
@@ -33,15 +33,14 @@ namespace SimplexMethod
                 dataGridView1.Columns[i].HeaderText = "x" + (i+1);
             }
 
-            TestFill();
+            //TestFill();
 
-            double[,] test_mtrx = new double[,] { { 2, 1, 1, 0, 0, 0, 800 }, { 0, 1, 0, 2, 1, 0, 900 }, { 0, 0, 1, 1, 2, 3, 6000 }, { 0.4, 1.1, 1.4, 0, 0.3, 0.6, 0 } };
+            //double[,] test_mtrx = new double[,] { { 2, 1, 1, 0, 0, 0, 800 }, { 0, 1, 0, 2, 1, 0, 900 }, { 0, 0, 1, 1, 2, 3, 6000 }, { -0.4, -1.1, -1.4, 0, -0.3, -0.6, 0 } };
+            double[,] test_mtrx = new double[,] { { 2, 1, 3, 1 }, { -1,3,-1,3 }, { 1,11,3,11 },{-1,1,0,1} };
             double[,] s_table = new double[row+1,col+row];
-            int k = 0; //итератор искуственного базиса
 
             //Формирование матрицы с искуственным базисом без f(x) и базисных значений
             for (int i = 0; i < s_table.GetLength(0)-1; i++) {
-                double buffer = 0;
                 for (int j = 0;j < s_table.GetLength(1)-1; j++) {
                     if (isset(test_mtrx, i, j)&&(i<test_mtrx.GetLength(0)-1)&&(j<test_mtrx.GetLength(1)-1))
                     {
@@ -59,22 +58,40 @@ namespace SimplexMethod
                     }
                 }
             }
+            //Добавление базисных значений (количество заготовок)
+            for (int i = 0; i < test_mtrx.GetLength(0); i++)
+            {
+                s_table[i, s_table.GetLength(1) - 2] = test_mtrx[i, test_mtrx.GetLength(1) - 1];
+            }
+
             //Добавление f(x) (остатков раскроя)
             for (int i = 0; i < test_mtrx.GetLength(1); i++) {
                 s_table[s_table.GetLength(0) - 2, i] = test_mtrx[test_mtrx.GetLength(0) - 1, i];
             }
-            //Добавление базисных значений (количество заготовок)
-            for (int i = 0; i < test_mtrx.GetLength(0); i++)
-            {
-                s_table[i,s_table.GetLength(1)-2] = test_mtrx[i,test_mtrx.GetLength(1)-1];
-            }
 
+            //Добавление z(x) (функция искуственных базисов)
+            s_table = find_z_row(s_table, row-1,col-1);
+
+            //Поиск результирующего элемента
+            int[] result_indexes = new int[2];
+            do
+            {
+                result_indexes = find_result_element(s_table);
+                s_table = recount_result_lines(s_table, result_indexes);
+                double s = s_table[s_table.GetLength(0) - 1, s_table.GetLength(1) - 2];
+            }
+            while (s_table[s_table.GetLength(0) - 1, s_table.GetLength(1) - 2]>0);
 
             print_array(s_table);
+
+            if (result_indexes[0] > -1 && result_indexes[1] > -1)
+            {
+                dataGridView1.Rows[result_indexes[1]].Cells[result_indexes[0]].Style.BackColor = Color.Green;
+            }
         }
 
         private void TestFill() {
-            double[,] mtrx = new double[,] { {2, 1, 1, 0, 0, 0,800 },{0, 1, 0, 2, 1, 0,900 },{ 0, 0, 1, 1, 2, 3,6000},{ 0.4,1.1,1.4,0,0.3,0.6,0} };
+            double[,] mtrx = new double[,] { {2, 1, 1, 0, 0, 0,800 },{0, 1, 0, 2, 1, 0,900 },{ 0, 0, 1, 1, 2, 3,6000},{ -0.4,-1.1,-1.4,0,-0.3,-0.6,0} };
             for (int i = 0; i < 4; i++) {
                 for (int j = 0; j < 7; j++) {
                     dataGridView1.Rows[i].Cells[j].Value = mtrx[i, j];
@@ -92,6 +109,84 @@ namespace SimplexMethod
             }
         }
 
+        //Добавление z(x) (функция искуственных базисов)
+        private double[,] find_z_row(double[,] arr,int basis_row_count,int var_count) {
+            for (int i = 0; i < arr.GetLength(1); i++) {
+                if (i < var_count || i > var_count + basis_row_count-1)
+                {
+                    for (int j = 0; j < arr.GetLength(0) - 2; j++)
+                    {
+                        arr[arr.GetLength(0) - 1, i] = arr[arr.GetLength(0) - 1, i] + arr[j, i];
+                    }
+                }
+            }
+            return arr;
+        }
+
+        //Поиск результирующего элемента
+        private int[] find_result_element(double[,] arr) {
+
+            double max = 0;
+            int index_max = -1;
+            int index_min = -1;
+            int[] index_res = new int[2];
+            for (int j = 0; j < arr.GetLength(1) - 2; j++) {
+                if (arr[arr.GetLength(0) - 1, j] > max) {
+                    max = arr[arr.GetLength(0) - 1, j];
+                    index_max = j;
+                }
+            }
+
+            double min_res = 0;
+            for (int i = 0; i < arr.GetLength(0)-2; i++) {
+                if (arr[i, index_max] != 0)
+                {
+                    double temp = arr[i, arr.GetLength(1) - 2] / arr[i, index_max];
+                    if (min_res == 0 || min_res > temp)
+                    {
+                        min_res = temp;
+                        index_min = i;
+                    }
+                }
+            }
+            index_res[0] = index_max;
+            index_res[1] = index_min;
+            return index_res;
+        }
+
+        //Пересчет строки и столбца результирующего массива
+        private double[,] recount_result_lines(double[,] arr,int[] indexes) {
+            double result_element = arr[indexes[1], indexes[0]];
+            double[,] old_arr = new double[arr.GetLength(0),arr.GetLength(1)];
+            old_arr = arr;
+
+            for (int i = 0; i < arr.GetLength(0); i++)
+            {
+                for (int j = 0; j < arr.GetLength(1); j++)
+                {
+                    if (i != indexes[1] && j != indexes[0])
+                    {
+                        Debug.WriteLine(old_arr[i, j] + "-(" + old_arr[i, indexes[0]] + "*" + old_arr[indexes[1], j] + ")/" + result_element);
+                        double k = old_arr[i, j] - (old_arr[i, indexes[0]] * old_arr[indexes[1], j]) / result_element;
+                        arr[i, j] = k;
+
+                    }
+                    //Debugger.Break();
+                }
+            }
+
+            for (int i=0;i<arr.GetLength(1); i++) {
+                arr[indexes[1],i] = Math.Round(arr[indexes[1],i] / result_element,2);
+            }
+            for (int j = 0; j < arr.GetLength(0); j++) {
+                if(j!=indexes[1])
+                    arr[j, indexes[0]] = 0;
+            }
+            
+            return arr;
+        }
+
+        //Вывод массива на экран
         private void print_array(double[,] arr) {
             dataGridView1.Rows.Clear();
             dataGridView1.RowCount = arr.GetLength(0);
@@ -146,6 +241,7 @@ namespace SimplexMethod
 
         }
 
+        //Функция заполнения вариантов раскроя
         private void button2_Click(object sender, EventArgs e)
         {   
             int gr2kol = dataGridView2.ColumnCount-1;
@@ -185,7 +281,6 @@ namespace SimplexMethod
                     temp_size = start_size;
                 }
                 else {
-                    //Debugger.Break();
                     if (last_el > 0)
                     {
                         double[] tr = new double[result_arr.Length];
@@ -220,11 +315,8 @@ namespace SimplexMethod
                 {
                     if (t > 0)
                     {
-                        //Debugger.Break();
                         result_arr[i] = (int)Math.Truncate((temp_size / t));
-                        //Debugger.Break();
                         temp_size = temp_size - (result_arr[i] * t);
-                       // Debugger.Break();
                     }
                     i++;
                 }
