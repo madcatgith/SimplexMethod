@@ -20,23 +20,24 @@ namespace SimplexMethod
 
         private void button1_Click(object sender, EventArgs e)
         {
-            textBox1.Text = "3";
+            textBox1.Text = "6";
             textBox2.Text = "3";
 
-            int col = Int32.Parse(textBox1.Text.ToString()) + 1;
-            int row = Int32.Parse(textBox2.Text.ToString()) + 1;
+            int col = Int32.Parse(textBox1.Text.ToString()) + 1; //количество переменных +1
+            int row = Int32.Parse(textBox2.Text.ToString()) + 1; //количество условий +1
 
-            dataGridView1.ColumnCount = col;
+            /*dataGridView1.ColumnCount = col;
             dataGridView1.RowCount = row;
             for (int i = 0; i < (dataGridView1.ColumnCount-1); i++)
             {
                 dataGridView1.Columns[i].HeaderText = "x" + (i+1);
-            }
+            }*/
 
             //TestFill();
 
-            //double[,] test_mtrx = new double[,] { { 2, 1, 1, 0, 0, 0, 800 }, { 0, 1, 0, 2, 1, 0, 900 }, { 0, 0, 1, 1, 2, 3, 6000 }, { -0.4, -1.1, -1.4, 0, -0.3, -0.6, 0 } };
-            double[,] test_mtrx = new double[,] { { 2, 1, 3, 1 }, { -1,3,-1,3 }, { 1,11,3,11 },{-1,1,0,1} };
+            //Пихать сюда
+            double[,] test_mtrx = new double[,] { { 2, 1, 1, 0, 0, 0, 800 }, { 0, 1, 0, 2, 1, 0, 900 }, { 0, 0, 1, 1, 2, 3, 6000 }, { -0.4, -1.1, -1.4, 0, -0.3, -0.6, 0 } };
+            //double[,] test_mtrx = new double[,] { { 2, 1, 3, 1 }, { -1,3,-1,3 }, { 1,11,3,11 },{-1,1,0,1} };
             double[,] s_table = new double[row+1,col+row];
 
             //Формирование матрицы с искуственным базисом без f(x) и базисных значений
