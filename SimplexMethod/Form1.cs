@@ -139,7 +139,7 @@ namespace SimplexMethod
             {
                 for (int i = 0; i < stb; i++)
                 {
-                    matrix[j, i] = Convert.ToDouble(dataGridView1.Rows[j].Cells[i].Value);                    
+                    matrix[j, i] = Convert.ToDouble(dataGridView1.Rows[j].Cells[i].Value);   // заполняем матрицу                 
                 }
             }
             //Debugger.Break();
