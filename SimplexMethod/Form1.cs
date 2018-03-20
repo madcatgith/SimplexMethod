@@ -41,19 +41,11 @@ namespace SimplexMethod
             int col = Int32.Parse(textBox1.Text.ToString()) + 1; //количество переменных +1
             int row = Int32.Parse(textBox2.Text.ToString()) + 1; //количество условий +1
 
-            /*dataGridView1.ColumnCount = col;
-            dataGridView1.RowCount = row;
-            for (int i = 0; i < (dataGridView1.ColumnCount-1); i++)
-            {
-                dataGridView1.Columns[i].HeaderText = "x" + (i+1);
-            }*/
-
             //TestFill();
 
             //Пихать сюда
             //double[,] test_mtrx = GetMatrix();
             double[,] test_mtrx = new double[,] { { 2, 1, 1, 0, 0, 0, 0, 800 }, { 0, 1, 0, 2, 1, 0, 2, 9000 }, { 0, 0, 1, 1, 2, 3, 0, 600 }, { -0.4, -1.1, -1.4, 0, -0.3, -0.6, -1.8, 0 } };
-            //double[,] test_mtrx = new double[,] { { 2, 1, 3, 1 }, { -1,3,-1,3 }, { 1,11,3,11 },{-1,1,0,1} };
             double[,] s_table = new double[row+1,col+row];
 
             //Формирование матрицы с искуственным базисом без f(x) и базисных значений
@@ -91,16 +83,12 @@ namespace SimplexMethod
 
             //Поиск результирующего элемента
             int[] result_indexes = new int[2];
-            int h = 0;
             do
             {
                 result_indexes = find_result_element(s_table);
                 s_table = recount_result_lines(s_table, result_indexes);
                 double s = s_table[s_table.GetLength(0) - 1, s_table.GetLength(1) - 2];
-                h++;
-                //Debugger.Break();
             }
-            //while (h < 3);
             while (s_table[s_table.GetLength(0) - 1, s_table.GetLength(1) - 2]>0);
 
             print_array(s_table);
@@ -111,21 +99,13 @@ namespace SimplexMethod
             }
         }
 
-        private void TestFill() {
-            double[,] mtrx = new double[,] { {2, 1, 1, 0, 0, 0,800 },{0, 1, 0, 2, 1, 0,900 },{ 0, 0, 1, 1, 2, 3,6000},{ -0.4,-1.1,-1.4,0,-0.3,-0.6,0} };
-            for (int i = 0; i < 4; i++) {
-                for (int j = 0; j < 7; j++) {
-                    dataGridView1.Rows[i].Cells[j].Value = mtrx[i, j];
-                }
-            }
-        }
-
         private bool isset(double[,] x,int i,int j) {
             try {
                 double z = x[i,j];
                 return true;
             }
             catch (Exception ex) {
+                Debug.WriteLine(ex.Message);
                 return false;
             }
         }
@@ -193,7 +173,6 @@ namespace SimplexMethod
                         arr[i, j] = k;
 
                     }
-                    //Debugger.Break();
                 }
             }
 
@@ -234,7 +213,6 @@ namespace SimplexMethod
             int kl = 0;
             for (int i = 0; i < arr.Count; i++) {
                 kl = i;
-                //dataGridView1.Columns[i].Name = Convert.ToString(i);
                 for (int j = 0; j < arr[i].Length; j++) {
                     dataGridView1.Rows[j].Cells[i].Value = arr[i][j];
                     num = j;
@@ -243,39 +221,20 @@ namespace SimplexMethod
             int row_dla_null = 0;
             for (int j = 0; j < arr[0].Length; j++)
             {
-                //dataGridView1.Columns[j].Name = Convert.ToString(kl + 1);
                 dataGridView1.Rows[j].Cells[kl + 1].Value = kol[j];
                 row_dla_null = j;
             }
-            //сортировка
-            /*dataGridView1.Columns[kl + 1].SortMode = DataGridViewColumnSortMode.Programmatic;
-            dataGridView1.Columns[kl + 1].Name = "kol";
-            dataGridView1.Sort(dataGridView1.Columns["kol"], ListSortDirection.Ascending);*/
-            //сортировка конец
+
             for (int i = 0; i < arr.Count; i++)
                 {
                     dataGridView1.Rows[num+1].Cells[i].Value = Math.Round(osta[i], 2);
                 }            
             dataGridView1.Rows[row_dla_null+1].Cells[kl + 1].Value = 0;
-
-            /*int lin = dataGridView1.RowCount;
-            int stb = dataGridView1.ColumnCount;
-            double[,] matrix = new double[lin, stb];
-            for (int j = 0; j < lin; j++)
-            {
-                for (int i = 0; i < stb; i++)
-                {
-                    matrix[j, i] = Convert.ToDouble(dataGridView1.Rows[j].Cells[i].Value);   // заполняем матрицу                 
-                }
-            }*/
-            //Debugger.Break();
-
         }
 
         //Функция заполнения вариантов раскроя
         private void button2_Click(object sender, EventArgs e)
-        {            
-            //dataGridView2.Sort(dataGridView2.Columns["Column2"], ListSortDirection.Descending);
+        {     
             int gr2kol = dataGridView2.ColumnCount-1;
             int gr2row = dataGridView2.RowCount-1;
             double[] start_type_size = new double[gr2row];            
@@ -288,10 +247,7 @@ namespace SimplexMethod
             {
                 kolich_d[p] = Convert.ToInt32(dataGridView2.Rows[p].Cells[1].Value);
             }
-            //Debugger.Break();
             int start_size = Convert.ToInt32(textBox3.Text); // максимальная длинна 
-            //double[] start_type_size = { 6.5, 3.7, 3 };
-            //int[] kolich_d = { 600, 800, 6000, 0 };
             double[] type_size = new double[start_type_size.Length]; // нужные размеры
             double[] result_arr = new double[type_size.Length];
             double[] temp_arr = new double[type_size.Length];
@@ -348,8 +304,7 @@ namespace SimplexMethod
                     if (t > 0)
                     {
                         temp_size = Math.Round(temp_size, 1);
-                        result_arr[i] = (int)Math.Truncate((temp_size / t));                        
-                        //Debugger.Break();
+                        result_arr[i] = (int)Math.Truncate((temp_size / t));
                         temp_size = temp_size - (result_arr[i] * t);                        
                     }
                     i++;
