@@ -35,7 +35,7 @@ namespace SimplexMethod
 
         private void button1_Click(object sender, EventArgs e)
         {
-            textBox1.Text = "6";
+            textBox1.Text = "7";
             textBox2.Text = "3";
 
             int col = Int32.Parse(textBox1.Text.ToString()) + 1; //количество переменных +1
@@ -51,8 +51,8 @@ namespace SimplexMethod
             //TestFill();
 
             //Пихать сюда
-            double[,] test_mtrx = GetMatrix();
-            //double[,] test_mtrx = new double[,] { { 2, 1, 1, 0, 0, 0, 800 }, { 0, 1, 0, 2, 1, 0, 900 }, { 0, 0, 1, 1, 2, 3, 6000 }, { -0.4, -1.1, -1.4, 0, -0.3, -0.6, 0 } };
+            //double[,] test_mtrx = GetMatrix();
+            double[,] test_mtrx = new double[,] { { 2, 1, 1, 0, 0, 0, 0, 800 }, { 0, 1, 0, 2, 1, 0, 2, 9000 }, { 0, 0, 1, 1, 2, 3, 0, 600 }, { -0.4, -1.1, -1.4, 0, -0.3, -0.6, -1.8, 0 } };
             //double[,] test_mtrx = new double[,] { { 2, 1, 3, 1 }, { -1,3,-1,3 }, { 1,11,3,11 },{-1,1,0,1} };
             double[,] s_table = new double[row+1,col+row];
 
@@ -91,12 +91,16 @@ namespace SimplexMethod
 
             //Поиск результирующего элемента
             int[] result_indexes = new int[2];
+            int h = 0;
             do
             {
                 result_indexes = find_result_element(s_table);
                 s_table = recount_result_lines(s_table, result_indexes);
                 double s = s_table[s_table.GetLength(0) - 1, s_table.GetLength(1) - 2];
+                h++;
+                //Debugger.Break();
             }
+            //while (h < 3);
             while (s_table[s_table.GetLength(0) - 1, s_table.GetLength(1) - 2]>0);
 
             print_array(s_table);
