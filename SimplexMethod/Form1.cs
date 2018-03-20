@@ -27,16 +27,15 @@ namespace SimplexMethod
             return matrix;
         }
 
-
-    public Form1()
+        public Form1()
         {
             InitializeComponent();
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            textBox1.Text = "7";
-            textBox2.Text = "3";
+            //textBox1.Text = "7";
+            //textBox2.Text = "3";
 
             int col = Int32.Parse(textBox1.Text.ToString()) + 1; //количество переменных +1
             int row = Int32.Parse(textBox2.Text.ToString()) + 1; //количество условий +1
@@ -44,8 +43,8 @@ namespace SimplexMethod
             //TestFill();
 
             //Пихать сюда
-            //double[,] test_mtrx = GetMatrix();
-            double[,] test_mtrx = new double[,] { { 2, 1, 1, 0, 0, 0, 0, 800 }, { 0, 1, 0, 2, 1, 0, 2, 9000 }, { 0, 0, 1, 1, 2, 3, 0, 600 }, { -0.4, -1.1, -1.4, 0, -0.3, -0.6, -1.8, 0 } };
+            double[,] test_mtrx = GetMatrix();
+            //double[,] test_mtrx = new double[,] { { 2, 1, 1, 0, 0, 0, 0, 800 }, { 0, 1, 0, 2, 1, 0, 2, 9000 }, { 0, 0, 1, 1, 2, 3, 0, 600 }, { -0.4, -1.1, -1.4, 0, -0.3, -0.6, -1.8, 0 } };
             double[,] s_table = new double[row+1,col+row];
 
             //Формирование матрицы с искуственным базисом без f(x) и базисных значений
@@ -97,8 +96,30 @@ namespace SimplexMethod
             {
                 dataGridView1.Rows[result_indexes[1]].Cells[result_indexes[0]].Style.BackColor = Color.Green;
             }
-        }
 
+            List<int> res_cols = new List<int>();
+
+            res_cols=show_results(s_table);
+
+            listBox1.Items.Clear();
+
+            foreach (int cl in res_cols) {
+                string plan = String.Empty;
+                string buy = String.Empty;
+                for (int i = 0; i < test_mtrx.GetLength(0)-1; i++) {
+                    plan += " " + test_mtrx[i,cl];
+                    if (s_table[i, cl] == 1) {
+                        buy = s_table[i, s_table.GetLength(1)-2].ToString();
+                    }
+                }
+                Debug.WriteLine(plan + "=" +buy);
+                
+                listBox1.Items.Add(plan + "=" + buy);
+            }
+
+        }
+        
+        //Проверка ячейки на существование
         private bool isset(double[,] x,int i,int j) {
             try {
                 double z = x[i,j];
@@ -108,6 +129,40 @@ namespace SimplexMethod
                 Debug.WriteLine(ex.Message);
                 return false;
             }
+        }
+
+        //Нахождение вариантов распила (находит базисные переменные введенные в матрицу после пересчета симплекс метода)
+        private List<int> show_results(double[,] arr) {
+
+            List<int> result_columns = new List<int>(); // список колонок с раскроем
+
+            for (int i = 0; i < arr.GetLength(1)-2; i++) {
+                int last_el = 0;
+                bool flag = false;
+                for (int j = 0; j < arr.GetLength(0)-2; j++) {
+                    if (arr[j,i] != 0 && arr[j,i] != 1)
+                    {
+                        break;
+                    }
+                    else if (arr[j,i]==1)
+                    {
+                        if (flag) {
+                            flag = false;
+                            break;
+                        }
+                        last_el = i;
+                        flag = true;
+                    }
+                    
+                }
+
+                if (flag) {
+                    result_columns.Add(last_el);
+                    Debug.WriteLine(dataGridView1.Columns[last_el].HeaderText);
+                }
+            }
+
+            return result_columns;
         }
 
         //Добавление z(x) (функция искуственных базисов)
