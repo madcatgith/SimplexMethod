@@ -13,6 +13,9 @@ namespace SimplexMethod
 {
     public partial class Form1 : Form
     {
+        double[,] ss_table;
+
+
         private double[,] GetMatrix(){
             int lin = dataGridView1.RowCount;
             int stb = dataGridView1.ColumnCount;            
@@ -82,12 +85,21 @@ namespace SimplexMethod
 
             //Добавление z(x) (функция искуственных базисов)
             s_table = find_z_row(s_table, row-1,col-1);
+            /*for (int i = 0; i < basis.Length; i++) {
+                basis[i] = (col + i).ToString();
+            }*/
+            print_array(s_table);
 
+            ss_table = s_table;
+            //
+            
             //Поиск результирующего элемента
             int[] result_indexes = new int[2];
+            int[] basis = new int[row - 1];
             do
             {
                 result_indexes = find_result_element(s_table);
+                change_basis(result_indexes,basis);
                 s_table = recount_result_lines(s_table, result_indexes);
                 double s = s_table[s_table.GetLength(0) - 1, s_table.GetLength(1) - 2];
             }
@@ -100,25 +112,29 @@ namespace SimplexMethod
                 dataGridView1.Rows[result_indexes[1]].Cells[result_indexes[0]].Style.BackColor = Color.Green;
             }
 
+            for (int i = 0; i < basis.Length; i++) {
+                dataGridView1.Rows[i].Cells[s_table.GetLength(1) - 1].Value = "x" + basis[i];
+            }
+
             List<int> res_cols = new List<int>();
 
             res_cols=show_results(s_table);
 
             listBox1.Items.Clear();
 
-            foreach (int cl in res_cols) {
+            for (int i = 0; i < basis.Length; i++) { 
                 string plan = String.Empty;
                 string buy = String.Empty;
-                for (int i = 0; i < test_mtrx.GetLength(0)-1; i++) {
-                    plan += " " + test_mtrx[i,cl];
-                    if (s_table[i, cl] == 1) {
-                        buy = s_table[i, s_table.GetLength(1)-2].ToString();
-                    }
+                for (int j = 0; j < test_mtrx.GetLength(0)-1; j++) {
+                    plan += " " + test_mtrx[j,basis[i]-1];
                 }
+                buy = s_table[i, s_table.GetLength(1) - 2].ToString();
                 Debug.WriteLine(plan + "=" +buy);
                 
                 listBox1.Items.Add(plan + "=" + buy);
             }
+
+            //
 
         }
         
@@ -199,7 +215,7 @@ namespace SimplexMethod
             double min_res = 0;
             for (int i = 0; i < arr.GetLength(0)-2; i++) {
                 //Debugger.Break();
-                if (arr[i, index_max] != 0)
+                if (arr[i, index_max] >= 0)
                 {
                     double temp = arr[i, arr.GetLength(1) - 2] / arr[i, index_max];
                     if (min_res == 0 || min_res > temp)
@@ -211,7 +227,14 @@ namespace SimplexMethod
             }
             index_res[0] = index_max;
             index_res[1] = index_min;
+
             return index_res;
+        }
+
+        //Замена базисов для вывода ответа
+        private void change_basis(int[] index_res,int[] basis) {
+            basis[index_res[1]] = index_res[0] + 1;
+            //Debugger.Break();
         }
 
         //Пересчет строки и столбца результирующего массива
@@ -227,7 +250,7 @@ namespace SimplexMethod
                     if (i != indexes[1] && j != indexes[0])
                     {
                         Debug.WriteLine(old_arr[i, j] + "-(" + old_arr[i, indexes[0]] + "*" + old_arr[indexes[1], j] + ")/" + result_element);
-                        double k = old_arr[i, j] - (old_arr[i, indexes[0]] * old_arr[indexes[1], j]) / result_element;
+                        double k = Math.Round(old_arr[i, j] - (old_arr[i, indexes[0]] * old_arr[indexes[1], j]) / result_element, 0); //Добавили округление в терминатора
                         arr[i, j] = k;
 
                     }
@@ -235,7 +258,7 @@ namespace SimplexMethod
             }
 
             for (int i=0;i<arr.GetLength(1); i++) {
-                arr[indexes[1],i] = Math.Round(arr[indexes[1],i] / result_element,2);
+                arr[indexes[1],i] = Math.Round(arr[indexes[1],i] / result_element,4);
             }
             for (int j = 0; j < arr.GetLength(0); j++) {
                 if(j!=indexes[1])
@@ -439,6 +462,23 @@ namespace SimplexMethod
             }
             
             return -1;
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            int[] result_indexes = new int[2];
+
+            result_indexes = find_result_element(ss_table);
+            ss_table = recount_result_lines(ss_table, result_indexes);
+            double s = ss_table[ss_table.GetLength(0) - 1, ss_table.GetLength(1) - 2];
+
+            print_array(ss_table);
+
+            if (result_indexes[0] > -1 && result_indexes[1] > -1)
+            {
+                dataGridView1.Rows[result_indexes[1]].Cells[result_indexes[0]].Style.BackColor = Color.Green;
+            }
+
         }
     }
 }
