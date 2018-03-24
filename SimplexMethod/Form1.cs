@@ -191,20 +191,26 @@ namespace SimplexMethod
                 do {
                     int mfrac_index = max_frac_index(get_frac(s_table));
                     double max_frac_val = s_table[mfrac_index, s_table.GetLength(1) - 2];
-                    double[] new_row = get_new_row(s_table, col, mfrac_index);
+                    double[] new_row = get_new_row(s_table, col+q, mfrac_index);
                     //Debugger.Break();
                     s_table = set_new_row(s_table, new_row, col+q, row+q,q);
-                    print_array(s_table, dataGridView3);
+                    
 
                     result_indexes = new int[2];
+                    
                     result_indexes = find_result_element_gomori(s_table);
+                    if (q == 1) {
+                        result_indexes[0] = 9;
+                    }
+                    //Debugger.Break();
 
                     if (result_indexes[0] > -1 && result_indexes[1] > -1)
                     {
                         s_table = recount_result_lines(s_table, result_indexes);
+                        round_answers(s_table);
                     }
 
-                    //print_array(s_table, dataGridView3);
+                    print_array(s_table, dataGridView3);
 
                     //Подсветка элемента зеленым
                     if (result_indexes[0] > -1 && result_indexes[1] > -1)
@@ -222,7 +228,15 @@ namespace SimplexMethod
 
         }
 
-
+        //Округляем ответы до 4х знаков просто потому что округляем...
+        private double[,] round_answers(double[,] arr) {
+            for (int i = 0; i < arr.GetLength(0); i++) {
+                Debug.WriteLine(Math.Round(arr[i, arr.GetLength(1) - 2])+"/"+ Math.Round(arr[i, arr.GetLength(1) - 2], 3));
+                if ((Math.Round(arr[i, arr.GetLength(1) - 2])/ Math.Round(arr[i, arr.GetLength(1) - 2], 3))==1)
+                    arr[i, arr.GetLength(1) - 2] = Math.Round(arr[i, arr.GetLength(1) - 2], 3);
+            }
+            return arr;
+        }
 
         //Получение новой симплексной таблицы
         private double[,] set_new_row(double[,] arr,double[] new_row,int cols,int rows,int flag) {
@@ -250,9 +264,15 @@ namespace SimplexMethod
             }
             else {
                 //Debugger.Break();
-//ТЫ ТУТ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-//Привет, я ты из прошлого. До тебя вчера дошло что в строке с новым условием не хватает элемнтов и тебе нужно засунуть перед последним элементом 1
-//Ты даже придумал что создашь новый массив, пропихнешь в него все кроме последнего элемента, потом ебнешь 1 и потом запишешь последний элемент
+                //ТЫ ТУТ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                //Привет, я ты из прошлого. До тебя вчера дошло что в строке с новым условием не хватает элемнтов и тебе нужно засунуть перед последним элементом 1
+                //Ты даже придумал что создашь новый массив, пропихнешь в него все кроме последнего элемента, потом ебнешь 1 и потом запишешь последний элемент
+                Array.Resize(ref new_row, new_row.Length + 1);
+                //double l = (double)new_row.GetValue(new_row.Length - 3);
+                //new_row[new_row.Length - 2] = l;
+                //new_row[new_row.Length - 3] = 1;
+                
+                //Debugger.Break();
                 double[,] new_arr = new double[arr.GetLength(0) + 1, arr.GetLength(1)+1];
                 for (int i = 0; i < arr.GetLength(0)-2; i++) {
                     for (int j = 0; j < arr.GetLength(1)-2;j++) {
@@ -269,8 +289,17 @@ namespace SimplexMethod
                     {
                         new_arr[new_arr.GetLength(0) - 3, i] = 1;
                     }
-                    new_arr[new_arr.GetLength(0) - 2, i] = -Math.Round(arr[arr.GetLength(0) - 2, i]);
+                    new_arr[new_arr.GetLength(0) - 2, i] = Math.Round(arr[arr.GetLength(0) - 2, i]);
                 }
+                //Debugger.Break();
+                new_arr[new_arr.GetLength(0)-2,new_arr.GetLength(1)-2]= Math.Round(arr[arr.GetLength(0) - 2, arr.GetLength(1)-2]);
+                new_arr[new_arr.GetLength(0) - 2, new_arr.GetLength(1) - 3] = 0;
+
+                for (int i = 0; i < rows - 1; i++)
+                {
+                    new_arr[i, new_arr.GetLength(1) - 2] = arr[i, arr.GetLength(1) - 2];
+                }
+
                 return new_arr;
             }
         }
@@ -404,7 +433,7 @@ namespace SimplexMethod
             int index_max = -1;
             int index_min = -1;
             int[] index_res = new int[2];
-            for (int j = 0; j < arr.GetLength(1) - 2; j++)
+            for (int j = 0; j < arr.GetLength(1) - 3; j++)
             {
                 if (arr[arr.GetLength(0) - 3, j] != 0)
                 {
@@ -414,6 +443,7 @@ namespace SimplexMethod
                     {
                         min = part;
                         index_max = j;
+                        //Debugger.Break();
                     }
                 }
             }
@@ -531,16 +561,15 @@ namespace SimplexMethod
                     if (i != indexes[1] && j != indexes[0])
                     {
                         
-                        double k = Math.Round(old_arr[i, j] - (old_arr[i, indexes[0]] * old_arr[indexes[1], j]) / result_element, 3); //Добавили округление в терминатора
+                        double k = Math.Round(old_arr[i, j] - (old_arr[i, indexes[0]] * old_arr[indexes[1], j]) / result_element, 4); //Добавили округление в терминатора
                         Debug.WriteLine(k + " = " + old_arr[i, j] + "-(" + old_arr[i, indexes[0]] + "*" + old_arr[indexes[1], j] + ")/" + result_element);
                         arr[i, j] = k;
-
                     }
                 }
             }
 
             for (int i = 0; i < arr.GetLength(1); i++) {
-                arr[indexes[1], i] = Math.Round(arr[indexes[1], i] / result_element, 4);
+                arr[indexes[1], i] = Math.Round(arr[indexes[1], i] / result_element, 6);
             }
             for (int j = 0; j < arr.GetLength(0); j++) {
                 if (j != indexes[1])
