@@ -164,52 +164,115 @@ namespace SimplexMethod
 
             listBox1.Items.Clear();
             listBox1.Items.Add(check_int(s_table));
-
-            if (check_int(s_table)) //Проверка на потребность решения методом Гомори
-            {
-                double rest = 0;
-
-                for (int i = 0; i < basis.Length; i++)
+            
+                if (check_int(s_table)) //Проверка на потребность решения методом Гомори
                 {
-                    string plan = String.Empty;
-                    string buy = String.Empty;
-                    for (int j = 0; j < test_mtrx.GetLength(0) - 1; j++)
-                    {
-                        plan += " " + test_mtrx[j, basis[i] - 1];
-                    }
-                    rest += test_mtrx[test_mtrx.GetLength(0) - 1, basis[i] - 1] * s_table[i, s_table.GetLength(1) - 2];
-                    buy = s_table[i, s_table.GetLength(1) - 2].ToString();
-                    Debug.WriteLine(plan + "=" + buy);
+                    double rest = 0;
 
-                    listBox1.Items.Add(plan + "=" + buy);
+                    for (int i = 0; i < basis.Length; i++)
+                    {
+                        string plan = String.Empty;
+                        string buy = String.Empty;
+                        for (int j = 0; j < test_mtrx.GetLength(0) - 1; j++)
+                        {
+                            plan += " " + test_mtrx[j, basis[i] - 1];
+                        }
+                        rest += test_mtrx[test_mtrx.GetLength(0) - 1, basis[i] - 1] * s_table[i, s_table.GetLength(1) - 2];
+                        buy = s_table[i, s_table.GetLength(1) - 2].ToString();
+                        Debug.WriteLine(plan + "=" + buy);
+
+                        listBox1.Items.Add(plan + "=" + buy);
+                    }
+                    listBox1.Items.Add("Остаток:" + rest);
                 }
-                listBox1.Items.Add("Остаток:" + rest);
-            }
-            else { //дополнительная обработка методом Гомори
-                int mfrac_index = max_frac_index(get_frac(s_table));
-                double max_frac_val=s_table[mfrac_index,s_table.GetLength(1)-2];
-                double[] new_row=get_new_row(s_table,col,mfrac_index);
-                print_array(set_new_row(s_table,new_row,col,row),dataGridView3);
-                //Debugger.Break();
-            }
+                else
+                { //дополнительная обработка методом Гомори
+                int q = 0;
+                do {
+                    int mfrac_index = max_frac_index(get_frac(s_table));
+                    double max_frac_val = s_table[mfrac_index, s_table.GetLength(1) - 2];
+                    double[] new_row = get_new_row(s_table, col, mfrac_index);
+                    //Debugger.Break();
+                    s_table = set_new_row(s_table, new_row, col+q, row+q,q);
+                    print_array(s_table, dataGridView3);
+
+                    result_indexes = new int[2];
+                    result_indexes = find_result_element_gomori(s_table);
+
+                    if (result_indexes[0] > -1 && result_indexes[1] > -1)
+                    {
+                        s_table = recount_result_lines(s_table, result_indexes);
+                    }
+
+                    //print_array(s_table, dataGridView3);
+
+                    //Подсветка элемента зеленым
+                    if (result_indexes[0] > -1 && result_indexes[1] > -1)
+                    {
+                        dataGridView3.Rows[result_indexes[1]].Cells[result_indexes[0]].Style.BackColor = Color.Green;
+                    }
+
+                    
+                    q++;
+                } while (q<2);   
+                    
+                 
+                }
+            
+
         }
+
+
+
         //Получение новой симплексной таблицы
-        private double[,] set_new_row(double[,] arr,double[] new_row,int cols,int rows) {
-            double[,] new_arr = new double[rows + 2, cols + 2];
-            for (int i = 0; i < rows-1; i++) {
-                for (int j = 0; j < cols-1; j++) {
-                    new_arr[i, j] = arr[i, j]; 
+        private double[,] set_new_row(double[,] arr,double[] new_row,int cols,int rows,int flag) {
+            if (flag == 0)
+            {
+                double[,] new_arr = new double[rows + 2, cols + 2];
+                for (int i = 0; i < rows - 1; i++)
+                {
+                    for (int j = 0; j < cols - 1; j++)
+                    {
+                        new_arr[i, j] = arr[i, j];
+                    }
                 }
+                for (int i = 0; i < new_arr.GetLength(1) - 1; i++)
+                {
+                    new_arr[new_arr.GetLength(0) - 3, i] = new_row[i];
+                    new_arr[new_arr.GetLength(0) - 2, i] = -Math.Round(arr[arr.GetLength(0) - 2, i]);
+                }
+                for (int i = 0; i < rows - 1; i++)
+                {
+                    new_arr[i, new_arr.GetLength(1) - 2] = arr[i, arr.GetLength(1) - 2];
+                }
+                new_arr[new_arr.GetLength(0) - 2, new_arr.GetLength(1) - 2] = -Math.Round(arr[arr.GetLength(0) - 2, arr.GetLength(1) - 2]);
+                return new_arr;
             }
-            for (int i = 0; i < new_arr.GetLength(1)-1; i++) {
-                new_arr[new_arr.GetLength(0) - 3, i] = new_row[i];
-                new_arr[new_arr.GetLength(0) - 2, i] = -Math.Round(arr[arr.GetLength(0)-2,i]);
+            else {
+                //Debugger.Break();
+//ТЫ ТУТ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//Привет, я ты из прошлого. До тебя вчера дошло что в строке с новым условием не хватает элемнтов и тебе нужно засунуть перед последним элементом 1
+//Ты даже придумал что создашь новый массив, пропихнешь в него все кроме последнего элемента, потом ебнешь 1 и потом запишешь последний элемент
+                double[,] new_arr = new double[arr.GetLength(0) + 1, arr.GetLength(1)+1];
+                for (int i = 0; i < arr.GetLength(0)-2; i++) {
+                    for (int j = 0; j < arr.GetLength(1)-2;j++) {
+                        new_arr[i, j] = arr[i, j];
+                    }
+                }
+                for (int i = 0; i < new_arr.GetLength(1) - 1; i++)
+                {
+                    if (new_row.Length-1 > i)
+                    {
+                        new_arr[new_arr.GetLength(0) - 3, i] = new_row[i];
+                    }
+                    else
+                    {
+                        new_arr[new_arr.GetLength(0) - 3, i] = 1;
+                    }
+                    new_arr[new_arr.GetLength(0) - 2, i] = -Math.Round(arr[arr.GetLength(0) - 2, i]);
+                }
+                return new_arr;
             }
-            for (int i = 0; i < rows - 1; i++) {
-                new_arr[i, new_arr.GetLength(1) - 2] = arr[i, arr.GetLength(1) - 2];
-            }
-            new_arr[new_arr.GetLength(0) - 2, new_arr.GetLength(1) - 2] = -Math.Round(arr[arr.GetLength(0) - 2, arr.GetLength(1) - 2]);
-            return new_arr;
         }
         //Получение нового условия для метода Гомори
         private double[] get_new_row(double[,] arr,int col,int rowindex) {
@@ -333,6 +396,47 @@ namespace SimplexMethod
             return arr;
         }
 
+        //Поиск результирующего элемента для метода Гомори
+        private int[] find_result_element_gomori(double[,] arr)
+        {
+
+            double min = double.MaxValue;
+            int index_max = -1;
+            int index_min = -1;
+            int[] index_res = new int[2];
+            for (int j = 0; j < arr.GetLength(1) - 2; j++)
+            {
+                if (arr[arr.GetLength(0) - 3, j] != 0)
+                {
+                    double part = arr[arr.GetLength(0) - 2, j] / arr[arr.GetLength(0) - 3, j];
+
+                    if (part < min)
+                    {
+                        min = part;
+                        index_max = j;
+                    }
+                }
+            }
+
+            //Debugger.Break();
+
+            double min_res = 0;
+            for (int i = 0; i < arr.GetLength(0) - 2; i++)
+            {
+                //Debugger.Break();
+                    if (min_res>arr[i,arr.GetLength(1)-2])
+                    {
+                        min_res = arr[i, arr.GetLength(1)-2];
+                        //Debugger.Break();
+                        index_min = i;
+                    }
+            }
+            index_res[0] = index_max;
+            index_res[1] = index_min;
+            //Debugger.Break();
+            return index_res;
+        }
+
         //Поиск результирующего элемента для метода искуственного базиса
         private int[] find_result_element(double[,] arr) {
 
@@ -426,8 +530,9 @@ namespace SimplexMethod
                 {
                     if (i != indexes[1] && j != indexes[0])
                     {
-                        Debug.WriteLine(old_arr[i, j] + "-(" + old_arr[i, indexes[0]] + "*" + old_arr[indexes[1], j] + ")/" + result_element);
-                        double k = Math.Round(old_arr[i, j] - (old_arr[i, indexes[0]] * old_arr[indexes[1], j]) / result_element, 4); //Добавили округление в терминатора
+                        
+                        double k = Math.Round(old_arr[i, j] - (old_arr[i, indexes[0]] * old_arr[indexes[1], j]) / result_element, 3); //Добавили округление в терминатора
+                        Debug.WriteLine(k + " = " + old_arr[i, j] + "-(" + old_arr[i, indexes[0]] + "*" + old_arr[indexes[1], j] + ")/" + result_element);
                         arr[i, j] = k;
 
                     }
